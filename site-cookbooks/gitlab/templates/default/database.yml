@@ -1,7 +1,6 @@
 base: &base
-  adapter: mysql2
+  adapter: postgresql
   encoding: utf8
-  reconnect: false
   pool: 5
   username: vagrant
   password: vagrant

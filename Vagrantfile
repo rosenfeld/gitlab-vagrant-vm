@@ -1,14 +1,14 @@
 Vagrant::Config.run do |config|
-  config.vm.box = "precise32"
-  config.vm.box_url = "http://files.vagrantup.com/precise32.box"
+  config.vm.box = "DebianSqueeze64"
+  config.vm.box_url = "https://dl.dropbox.com/u/1543052/Boxes/DebianSqueeze64.box"
   config.vm.network :hostonly, '192.168.3.14'
 
-  # Default user/group id for vagrant in precise32
+  # Default user/group id for vagrant in Debian
   host_user_id = 1000
   host_group_id = 1000
 
   if RUBY_PLATFORM =~ /linux|darwin/
-    config.vm.share_folder("vagrant-root", "/vagrant", ".", :nfs => true)
+    config.vm.share_folder "vagrant-root", "/vagrant", "."#, :nfs => true
     host_user_id = Process.euid
     host_group_id = Process.egid
   end
@@ -19,13 +19,10 @@ Vagrant::Config.run do |config|
     chef.add_recipe('rvm::vagrant')
     chef.add_recipe('rvm::user')
 
-    chef.add_recipe('mysql::server')
-    chef.add_recipe('mysql::ruby')
-
     chef.add_recipe('postgresql::server')
     chef.add_recipe('postgresql::ruby')
 
-    chef.add_recipe('database::mysql')
+    chef.add_recipe('database::postgresql')
 
     chef.add_recipe('phantomjs')
 
@@ -33,15 +30,17 @@ Vagrant::Config.run do |config|
     # see site-cookbooks/gitlab/
     chef.add_recipe('gitlab::vagrant')
 
+    chef.binary_path = '/var/lib/gems/1.8/bin'
+
     chef.json = {
       :rvm => {
         :user_installs => [
           { :user         => 'vagrant',
-            :default_ruby => '1.9.3'
+            :default_ruby => '2.0.0'
           }
         ],
         :vagrant => {
-          :system_chef_solo => '/opt/vagrant_ruby/bin/chef-solo'
+          :system_chef_solo => chef.binary_path
         },
         :global_gems => [{ :name => 'bundler'}],
         :branch => 'none',
@@ -49,11 +48,6 @@ Vagrant::Config.run do |config|
       },
       :phantomjs => {
         :version => '1.8.1'
-      },
-      :mysql => {
-        :server_root_password => "nonrandompasswordsaregreattoo",
-        :server_repl_password => "nonrandompasswordsaregreattoo",
-        :server_debian_password => "nonrandompasswordsaregreattoo"
       },
       :gitlab => {
         :host_user_id => host_user_id,

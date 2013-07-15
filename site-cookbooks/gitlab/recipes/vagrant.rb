@@ -89,7 +89,7 @@ template "#{node['gitlab']['app_home']}/config/gitlab.yml" do
   )
 end
 
-# Use mysql as our database
+# Use postgresql as our database
 template "#{node['gitlab']['app_home']}/config/database.yml" do
   source 'database.yml'
   user node['gitlab']['host_user_id']
@@ -98,20 +98,9 @@ template "#{node['gitlab']['app_home']}/config/database.yml" do
 end
 
 # Database information
-mysql_connexion = { :host     => 'localhost',
-                    :username => 'root',
-                    :password => node['mysql']['server_root_password'] }
-
 postgresql_connexion = { :host     => 'localhost',
                          :username => 'postgres',
                          :password => node['postgresql']['password']['postgres'] }
-
-# Create mysql user vagrant
-mysql_database_user 'vagrant' do
-  connection mysql_connexion
-  password 'vagrant'
-  action :create
-end
 
 postgresql_database_user 'vagrant' do
   connection postgresql_connexion
@@ -121,10 +110,6 @@ end
 
 # Create databases and users
 %w{ gitlabhq_production gitlabhq_development gitlabhq_test }.each do |db|
-  mysql_database "#{db}" do
-    connection mysql_connexion
-    action :create
-  end
 
   postgresql_database "#{db}" do
     connection postgresql_connexion
@@ -139,14 +124,6 @@ end
     action :grant
   end
 end
-
-# Grant all privelages on all databases/tables from localhost to vagrant
-mysql_database_user 'vagrant' do
-  connection mysql_connexion
-  password 'vagrant'
-  action :grant
-end
-
 
 # Render Xvfb start service
 template "/etc/init.d/xvfb" do
